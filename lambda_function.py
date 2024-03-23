@@ -21,7 +21,7 @@ def lambda_handler(event, context):
         user_attributes = get_user_attributes(username, USER_POOL_ID)
         print("User Attributes:", user_attributes)
         
-        # access_token = get_keycloak_access_token()
+        access_token = get_keycloak_access_token()
         # user_data = {
         #     "username": username,
         #     "enabled": True,

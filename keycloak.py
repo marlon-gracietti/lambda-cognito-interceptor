@@ -1,5 +1,7 @@
 # keycloak.py
-import requests
+import urllib.request
+import urllib.parse
+import json
 
 KEYCLOAK_BASE_URL = "https://keycloak.hml.propagandistanc.com/auth"
 REALM_NAME = "NHUB"
@@ -13,9 +15,11 @@ def get_keycloak_access_token():
         "client_secret": CLIENT_SECRET,
         "grant_type": "client_credentials",
     }
-    response = requests.post(url, data=payload)
-    response.raise_for_status()
-    return response.json()["access_token"]
+    data = urllib.parse.urlencode(payload).encode()
+    req = urllib.request.Request(url, data=data)  # Dados devem ser codificados
+    with urllib.request.urlopen(req) as response:
+        response_body = response.read()
+        return json.loads(response_body.decode())["access_token"]
 
 def add_user_to_keycloak(user_data, access_token):
     url = f"{KEYCLOAK_BASE_URL}/admin/realms/{REALM_NAME}/users"
@@ -23,5 +27,11 @@ def add_user_to_keycloak(user_data, access_token):
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
     }
-    response = requests.post(url, json=user_data, headers=headers)
-    response.raise_for_status()
+    req = urllib.request.Request(url, data=json.dumps(user_data).encode(), headers=headers, method='POST')
+    with urllib.request.urlopen(req) as response:
+        response_body = response.read()
+        if response.status != 201:
+            raise Exception(f"Failed to add user: {response_body.decode()}")
+
+# Nota: urllib não lança exceções para códigos de status HTTP fora do range 200-299,
+# então você pode precisar verificar response.status manualmente para códigos de erro.
