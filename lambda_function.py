@@ -23,13 +23,13 @@ def lambda_handler(event, context):
         print("User Attributes:", user_attributes)
         
         access_token = get_keycloak_access_token()
-        # user_data = {
-        #     "username": username,
-        #     "enabled": True,
-        #     "attributes": user_attributes,
-        #     # Adicione ou ajuste campos conforme necessário
-        # }
-        # add_user_to_keycloak(user_data, access_token)
+        user_data = {
+            "username": username,
+            "enabled": True,
+            "attributes": user_attributes,
+            # Adicione ou ajuste campos conforme necessário
+        }
+        add_user_to_keycloak(user_data, access_token)
         
     except Exception as e:
         print("Error:", str(e))
