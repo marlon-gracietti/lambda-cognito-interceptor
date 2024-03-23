@@ -2,11 +2,12 @@
 import urllib.request
 import urllib.parse
 import json
+import os
 
-KEYCLOAK_BASE_URL = "https://keycloak.hml.propagandistanc.com/auth"
-REALM_NAME = "NHUB"
-CLIENT_ID = "nhub-users"
-CLIENT_SECRET = "5u3Q94TvigM9kt4BncFYTwoqyqZSGKak"
+CLIENT_SECRET = os.getenv('CLIENT_SECRET')
+CLIENT_ID = os.getenv('CLIENT_ID')
+KEYCLOAK_BASE_URL = os.getenv('KEYCLOAK_BASE_URL')
+REALM_NAME = os.getenv('REALM_NAME')
 
 def get_keycloak_access_token():
     url = f"{KEYCLOAK_BASE_URL}/realms/{REALM_NAME}/protocol/openid-connect/token"

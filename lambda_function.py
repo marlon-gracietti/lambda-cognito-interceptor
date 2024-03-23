@@ -1,9 +1,10 @@
 # lambda_function.py
+import os
 import base64
 from cognito import get_user_attributes
 from keycloak import get_keycloak_access_token, add_user_to_keycloak
 
-USER_POOL_ID = "us-east-1_vnrPcWJ2I"  # Substitua pelo seu User Pool ID
+USER_POOL_ID = os.getenv('USER_POOL_ID')
 
 def lambda_handler(event, context):
     print("START")
