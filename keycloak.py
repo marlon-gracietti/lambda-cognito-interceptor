@@ -1,13 +1,13 @@
-# keycloak.py
 import urllib.request
 import urllib.parse
 import json
 import os
 
-CLIENT_SECRET = os.getenv('CLIENT_SECRET')
-CLIENT_ID = os.getenv('CLIENT_ID')
+# Carregando variáveis de ambiente
+CLIENT_SECRET = os.getenv('KEYCLOAK_CLIENT_SECRET')
+CLIENT_ID = os.getenv('KEYCLOAK_CLIENT_ID')
 KEYCLOAK_BASE_URL = os.getenv('KEYCLOAK_BASE_URL')
-REALM_NAME = os.getenv('REALM_NAME')
+REALM_NAME = os.getenv('KEYCLOAK_REALM_NAME')
 
 def get_keycloak_access_token():
     url = f"{KEYCLOAK_BASE_URL}/realms/{REALM_NAME}/protocol/openid-connect/token"
@@ -17,10 +17,21 @@ def get_keycloak_access_token():
         "grant_type": "client_credentials",
     }
     data = urllib.parse.urlencode(payload).encode()
-    req = urllib.request.Request(url, data=data)  # Dados devem ser codificados
+    req = urllib.request.Request(url, data=data)
     with urllib.request.urlopen(req) as response:
         response_body = response.read()
         return json.loads(response_body.decode())["access_token"]
+
+def get_user_id(username, access_token):
+    url = f"{KEYCLOAK_BASE_URL}/admin/realms/{REALM_NAME}/users?username={username}"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    req = urllib.request.Request(url, headers=headers, method="GET")
+    with urllib.request.urlopen(req) as response:
+        response_body = response.read()
+        users = json.loads(response_body.decode())
+        if users:
+            return users[0]['id']
+    return None
 
 def add_user_to_keycloak(user_data, access_token):
     url = f"{KEYCLOAK_BASE_URL}/admin/realms/{REALM_NAME}/users"
@@ -29,10 +40,37 @@ def add_user_to_keycloak(user_data, access_token):
         "Content-Type": "application/json",
     }
     req = urllib.request.Request(url, data=json.dumps(user_data).encode(), headers=headers, method='POST')
-    with urllib.request.urlopen(req) as response:
-        response_body = response.read()
-        if response.status != 201:
-            raise Exception(f"Failed to add user: {response_body.decode()}")
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 201:
+                print(f"User added: {user_data['username']}")
+            else:
+                print(f"Unexpected status code received when adding user: {response.status}")
+    except urllib.error.HTTPError as e:
+        if e.code == 409:
+            print(f"User already exists: {user_data['username']}")
+        else:
+            raise
 
-# Nota: urllib não lança exceções para códigos de status HTTP fora do range 200-299,
-# então você pode precisar verificar response.status manualmente para códigos de erro.
+def update_user_in_keycloak(user_id, user_data, access_token):
+    url = f"{KEYCLOAK_BASE_URL}/admin/realms/{REALM_NAME}/users/{user_id}"
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    req = urllib.request.Request(url, data=json.dumps(user_data).encode(), headers=headers, method='PUT')
+    try:
+        with urllib.request.urlopen(req) as response:
+            if response.status == 204:
+                print(f"User updated: {user_data['username']}")
+            else:
+                print(f"Unexpected status code received when updating user: {response.status}")
+    except urllib.error.HTTPError as e:
+        raise Exception(f"Failed to update user: {e}")
+
+def add_or_update_user_in_keycloak(user_data, access_token):
+    user_id = get_user_id(user_data['username'], access_token)
+    if user_id:
+        update_user_in_keycloak(user_id, user_data, access_token)
+    else:
+        add_user_to_keycloak(user_data, access_token)
