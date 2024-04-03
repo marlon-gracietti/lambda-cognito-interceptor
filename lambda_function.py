@@ -12,13 +12,10 @@ def lambda_handler(event, context):
     if not auth_header:
         print("Authorization header is missing")
         return generate_policy("user", "Deny", event["methodArn"])
-
-    print("auth_header: ", auth_header)
     
     auth_header = auth_header.replace("Basic", "").strip()
     auth_header_no_spaces = auth_header.replace(" ", "")
-    
-    
+        
     try:
         decoded_value = base64.b64decode(auth_header_no_spaces).decode("utf-8")
     except Exception as e:

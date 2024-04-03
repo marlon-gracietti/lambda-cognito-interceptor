@@ -1,0 +1,8 @@
+curl -k -X POST 'https://keycloak.hml.propagandistanc.com/auth/realms/NHUB/protocol/openid-connect/token' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-d 'client_id=nhub-users' \
+-d 'client_secret=5u3Q94TvigM9kt4BncFYTwoqyqZSGKak' \
+-d 'grant_type=password' \
+-d 'username=wallace.padua' \
+-d 'password=Wallace.padua1' \
+-d 'scope=openid'

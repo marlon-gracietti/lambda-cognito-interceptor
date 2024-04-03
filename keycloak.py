@@ -8,6 +8,7 @@ CLIENT_SECRET = os.getenv('KEYCLOAK_CLIENT_SECRET')
 CLIENT_ID = os.getenv('KEYCLOAK_CLIENT_ID')
 KEYCLOAK_BASE_URL = os.getenv('KEYCLOAK_BASE_URL')
 REALM_NAME = os.getenv('KEYCLOAK_REALM_NAME')
+GROUP_ID = os.getenv('KEYCLOAK_GROUP_ID')
 
 def get_keycloak_access_token():
     url = f"{KEYCLOAK_BASE_URL}/realms/{REALM_NAME}/protocol/openid-connect/token"
@@ -72,14 +73,14 @@ def add_or_update_user_in_keycloak(user_data, access_token):
     user_id = get_user_id(user_data['username'], access_token)
     if user_id:
         update_user_in_keycloak(user_id, user_data, access_token)
-        add_user_into_group(user_id, "8622822b-c587-4e52-8cad-2624ebff91c4", access_token)
+        add_user_into_group(user_id, access_token)
     else:
         add_user_to_keycloak(user_data, access_token)
         user_id = get_user_id(user_data['username'], access_token)
-        add_user_into_group(user_id, "8622822b-c587-4e52-8cad-2624ebff91c4", access_token)
+        add_user_into_group(user_id, access_token)
 
-def add_user_into_group(user_id, group_id, access_token):    
-    url = f"{KEYCLOAK_BASE_URL}/admin/realms/{REALM_NAME}/users/{user_id}/groups/{group_id}"
+def add_user_into_group(user_id, access_token):    
+    url = f"{KEYCLOAK_BASE_URL}/admin/realms/{REALM_NAME}/users/{user_id}/groups/{GROUP_ID}"
 
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -91,7 +92,7 @@ def add_user_into_group(user_id, group_id, access_token):
         with urllib.request.urlopen(req) as response:
             # Verificando o código de status 204 para sucesso
             if response.status == 204:
-                print(f"User {user_id} successfully added to group {group_id}")
+                print(f"User {user_id} successfully added to group {GROUP_ID}")
             else:
                 print(f"Unexpected status code received when adding user to group: {response.status}")
     except urllib.error.HTTPError as e:
